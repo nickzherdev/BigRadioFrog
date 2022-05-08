@@ -14,17 +14,27 @@
 #include <RF24.h>                                         // Подключаем библиотеку для работы с nRF24L01+
 #include "GyverButton.h"
 #include "printf.h"
+#include <GyverJoy.h>
 
 #define LED_PIN 5
 #define BTN_PIN 4  // кнопка подключена сюда (BTN_PIN --- КНОПКА --- GND)
 
-GButton butt1(BTN_PIN);
+#define JSW 2
+
+GyverJoy jx(0);   // джойстик на пине A0
+GyverJoy jy(1);   // джойстик на пине A1
+// GButton jsw(2);   // кнопка джойстика на пине 2
+
+GButton butt1(BTN_PIN);  // Trema-кнопка со светодиодом
+
 RF24 radio(9, 10);  // Создаём объект radio для работы с библиотекой RF24, указывая номера выводов nRF24L01+ порты D9, D10: CSN CE
 const uint32_t pipe = 111156789; // адрес рабочей трубы;
 
 byte data[1];  // Создаём массив для приёма данных
 int flag = 0;
 int value = 0;
+
+int JSW_state = 0;
 
 void setup(){
 
@@ -46,6 +56,22 @@ void setup(){
   // NORM_CLOSE - нормально-замкнутая кнопка
   // по умолчанию стоит NORM_OPEN
   butt1.setDirection(NORM_OPEN);
+
+  // Joystick button
+  // jsw.setType(LOW_PULL);
+  // jsw.setDebounce(50);        // настройка антидребезга (по умолчанию 80 мс)
+  // jsw.setTimeout(500);        // настройка таймаута на удержание (по умолчанию 500 мс)
+  // jsw.setClickTimeout(200);   // настройка таймаута между кликами (по умолчанию 300 мс)
+  // jsw.setDirection(NORM_OPEN);
+  pinMode(JSW, INPUT_PULLUP);
+
+  jx.calibrate();   // калибровка нуля при запуске
+  jx.deadzone(10);  // мёртвая зона
+  jx.exponent(GJ_CUBIC);  // экспонента для плавности
+ 
+  jy.calibrate();   // калибровка нуля при запуске
+  jy.deadzone(10);  // мёртвая зона
+  jy.exponent(GJ_CUBIC);  // экспонента для плавности
 
   //////////////////////////////
   ///////// SET UP LED /////////
@@ -74,6 +100,33 @@ void setup(){
 
 }
 void loop() {
+
+  // // тикер опрашивает АЦП по своему таймеру
+  // if (jx.tick()) {
+  //   // выводим значение
+  //   Serial.println(jx.value());
+  // }
+
+  // // тикер опрашивает АЦП по своему таймеру
+  // if (jy.tick()) {
+  //   // выводим значение
+  //   Serial.println(jy.value());
+  // }
+
+  // if (jsw.isClick()) {
+  //   Serial.println("Joystick Click");         // проверка на один клик
+  // }
+
+  JSW_state = digitalRead(JSW);
+  // Serial.print(" | Button: ");
+  Serial.println(!JSW_state);
+
+  // Serial.print(map(analogRead(J_VRX), 0, 1023, -100, 100));
+  // Serial.print(',');
+  // Serial.print(map(analogRead(J_VRY), 0, 1023, -100, 100));
+  // Serial.print(',');
+  // Serial.println(digitalRead(J_SW) * 100);
+
   data[0] = 50;
 
   butt1.tick();  // обязательная функция отработки. Должна постоянно опрашиваться

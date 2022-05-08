@@ -4,6 +4,9 @@
 
 #define PIN_LED 5
 
+#define SPEED_2      6  // Motor2
+#define DIR_2        7  // Motor2
+
 RF24 radio(9, 10);                              // Создаём объект radio   для работы с библиотекой RF24, указывая номера выводов nRF24L01+ (CE, CSN)
 const uint32_t pipe = 111156789; // адрес рабочей трубы;
 byte data[1];                                   // Создаём массив для приёма данных
@@ -11,6 +14,9 @@ byte data[1];                                   // Создаём массив �
 void setup(){
   Serial.begin(9600);
   pinMode(PIN_LED, OUTPUT);
+
+  pinMode(6, OUTPUT);  // Motor2
+  pinMode(7, OUTPUT);  // Motor2
 
   pinMode(8, OUTPUT);     // voltage pin for the LED
   digitalWrite(8, HIGH);  // voltage pin for the LED
@@ -32,18 +38,24 @@ void setup(){
   radio.powerUp();                  // начать работу
   radio.startListening();           // приём
   Serial.println("Receiver READY");
-
 }
 
 void loop(){
+
   if (radio.available()) {                                // Если в буфере имеются принятые данные
       radio.read(&data, sizeof(data));                  // Читаем данные в массив data и указываем сколько байт читать
       Serial.println(data[0]);
       analogWrite(PIN_LED, data[0]);
       delay(100);
+      // устанавливаем направление мотора «M2» в одну сторону
+      digitalWrite(DIR_2, LOW);
+      // включаем второй мотор на максимальной скорости
+      analogWrite(SPEED_2, 50);
   } else {
 //      Serial.println("No data");
       analogWrite(PIN_LED, 0);
+      // включаем второй мотор на максимальной скорости
+      analogWrite(SPEED_2, 0);
   }
 
 }
