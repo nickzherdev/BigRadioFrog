@@ -22,7 +22,7 @@
 #define JSW 2
 
 GyverJoy jx(0);   // джойстик на пине A0
-GyverJoy jy(1);   // джойстик на пине A1
+// GyverJoy jy(1);   // джойстик на пине A1
 // GButton jsw(2);   // кнопка джойстика на пине 2
 
 GButton butt1(BTN_PIN);  // Trema-кнопка со светодиодом
@@ -30,11 +30,13 @@ GButton butt1(BTN_PIN);  // Trema-кнопка со светодиодом
 RF24 radio(9, 10);  // Создаём объект radio для работы с библиотекой RF24, указывая номера выводов nRF24L01+ порты D9, D10: CSN CE
 const uint32_t pipe = 111156789; // адрес рабочей трубы;
 
-byte data[1];  // Создаём массив для приёма данных
+int transmit_data[1];     // массив пересылаемых данных
+// byte data[1];  // Создаём массив для приёма данных
 int flag = 0;
 int value = 0;
 
 int JSW_state = 0;
+int user_input_jx = 0;
 
 void setup(){
 
@@ -69,9 +71,9 @@ void setup(){
   jx.deadzone(10);  // мёртвая зона
   jx.exponent(GJ_CUBIC);  // экспонента для плавности
  
-  jy.calibrate();   // калибровка нуля при запуске
-  jy.deadzone(10);  // мёртвая зона
-  jy.exponent(GJ_CUBIC);  // экспонента для плавности
+  // jy.calibrate();   // калибровка нуля при запуске
+  // jy.deadzone(10);  // мёртвая зона
+  // jy.exponent(GJ_CUBIC);  // экспонента для плавности
 
   //////////////////////////////
   ///////// SET UP LED /////////
@@ -101,17 +103,12 @@ void setup(){
 }
 void loop() {
 
-  // // тикер опрашивает АЦП по своему таймеру
-  // if (jx.tick()) {
-  //   // выводим значение
-  //   Serial.println(jx.value());
-  // }
-
-  // // тикер опрашивает АЦП по своему таймеру
-  // if (jy.tick()) {
-  //   // выводим значение
-  //   Serial.println(jy.value());
-  // }
+  // тикер опрашивает АЦП по своему таймеру
+  if (jx.tick()) {
+    transmit_data[0] = jx.value();
+    // выводим значение
+    Serial.println(jx.value());
+  }
 
   // if (jsw.isClick()) {
   //   Serial.println("Joystick Click");         // проверка на один клик
@@ -119,15 +116,9 @@ void loop() {
 
   JSW_state = digitalRead(JSW);
   // Serial.print(" | Button: ");
-  Serial.println(!JSW_state);
+  // Serial.println(!JSW_state);
 
-  // Serial.print(map(analogRead(J_VRX), 0, 1023, -100, 100));
-  // Serial.print(',');
-  // Serial.print(map(analogRead(J_VRY), 0, 1023, -100, 100));
-  // Serial.print(',');
-  // Serial.println(digitalRead(J_SW) * 100);
-
-  data[0] = 50;
+  // data[0] = 50;
 
   butt1.tick();  // обязательная функция отработки. Должна постоянно опрашиваться
 
@@ -138,7 +129,7 @@ void loop() {
 
   if (flag == 1) {
     radio.powerUp();    // включить передатчик
-    radio.write(&data, sizeof(data));
+    radio.write(&transmit_data, sizeof(transmit_data));
     flag = 0;           //опустить флаг
     radio.powerDown();  // выключить передатчик
     Serial.println("Sent from click");         // проверка на один клик
@@ -154,13 +145,13 @@ void loop() {
   }
 
   if (butt1.isHold()) {                                  // если кнопка удерживается
-      Serial.println("Holding ");                  // выводим пока удерживается
-      analogWrite(LED_PIN, 20);
-      radio.powerUp();    // включить передатчик
-      radio.write(&data, sizeof(data));
-      radio.powerDown();  // выключить передатчик
-      Serial.println("Sent");         // проверка на один клик
-    } else {
-      analogWrite(LED_PIN, 0);
+    Serial.println("Holding ");                  // выводим пока удерживается
+    analogWrite(LED_PIN, 20);
+    radio.powerUp();    // включить передатчик
+    radio.write(&transmit_data, sizeof(transmit_data));
+    radio.powerDown();  // выключить передатчик
+    Serial.println("Sent");         // проверка на один клик
+  } else {
+    analogWrite(LED_PIN, 0);
   }
 }

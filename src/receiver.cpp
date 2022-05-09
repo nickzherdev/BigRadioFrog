@@ -9,7 +9,8 @@
 
 RF24 radio(9, 10);                              // Создаём объект radio   для работы с библиотекой RF24, указывая номера выводов nRF24L01+ (CE, CSN)
 const uint32_t pipe = 111156789; // адрес рабочей трубы;
-byte data[1];                                   // Создаём массив для приёма данных
+// byte data[1];                                   // Создаём массив для приёма данных
+int recieved_data[1];   // массив принятых данных
 
 void setup(){
   Serial.begin(9600);
@@ -43,18 +44,22 @@ void setup(){
 void loop(){
 
   if (radio.available()) {                                // Если в буфере имеются принятые данные
-      radio.read(&data, sizeof(data));                  // Читаем данные в массив data и указываем сколько байт читать
-      Serial.println(data[0]);
-      analogWrite(PIN_LED, data[0]);
+      radio.read(&recieved_data, sizeof(recieved_data));                  // Читаем данные в массив data и указываем сколько байт читать
+      Serial.println(recieved_data[0]);
+      analogWrite(PIN_LED, recieved_data[0]);
       delay(100);
-      // устанавливаем направление мотора «M2» в одну сторону
-      digitalWrite(DIR_2, LOW);
+      if (recieved_data[0] < 0) {
+        // устанавливаем направление мотора «M2» в одну сторону
+        digitalWrite(DIR_2, LOW);
+      }
+      else if (recieved_data[0] > 0) {
+        digitalWrite(DIR_2, HIGH);
+      }
       // включаем второй мотор на максимальной скорости
-      analogWrite(SPEED_2, 50);
+      analogWrite(SPEED_2, abs(recieved_data[0]));
   } else {
 //      Serial.println("No data");
       analogWrite(PIN_LED, 0);
-      // включаем второй мотор на максимальной скорости
       analogWrite(SPEED_2, 0);
   }
 
