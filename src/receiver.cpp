@@ -3,6 +3,7 @@
 #include <RF24.h>                                         // Подключаем библиотеку  для работы с nRF24L01+
 
 #define PIN_LED 5
+#define LED_POWER 8
 
 #define SPEED_2      6  // Motor2
 #define DIR_2        7  // Motor2
@@ -14,13 +15,13 @@ int recieved_data[1];   // массив принятых данных
 
 void setup(){
   Serial.begin(9600);
-  pinMode(PIN_LED, OUTPUT);
 
   pinMode(6, OUTPUT);  // Motor2
   pinMode(7, OUTPUT);  // Motor2
 
-  pinMode(8, OUTPUT);     // voltage pin for the LED
-  digitalWrite(8, HIGH);  // voltage pin for the LED
+  pinMode(PIN_LED, OUTPUT);
+  pinMode(LED_POWER, OUTPUT);     // voltage pin for the LED
+  digitalWrite(LED_POWER, HIGH);  // voltage pin for the LED
 
   Serial.println("Receiver ON");
 
@@ -42,25 +43,15 @@ void setup(){
 }
 
 void loop(){
-
-  if (radio.available()) {                                // Если в буфере имеются принятые данные
-      radio.read(&recieved_data, sizeof(recieved_data));                  // Читаем данные в массив data и указываем сколько байт читать
-      Serial.println(recieved_data[0]);
-      analogWrite(PIN_LED, recieved_data[0]);
+  if (radio.available()) {                                
+      radio.read(&recieved_data, sizeof(recieved_data));
+      analogWrite(PIN_LED, abs(recieved_data[0]));
+      // Serial.println(recieved_data[0]);
       delay(100);
-      if (recieved_data[0] < 0) {
-        // устанавливаем направление мотора «M2» в одну сторону
-        digitalWrite(DIR_2, LOW);
-      }
-      else if (recieved_data[0] > 0) {
-        digitalWrite(DIR_2, HIGH);
-      }
-      // включаем второй мотор на максимальной скорости
-      analogWrite(SPEED_2, abs(recieved_data[0]));
+      recieved_data[0] < 0 ? digitalWrite(DIR_2, LOW) : digitalWrite(DIR_2, HIGH);
+      analogWrite(SPEED_2, abs(recieved_data[0])/5);
   } else {
-//      Serial.println("No data");
       analogWrite(PIN_LED, 0);
       analogWrite(SPEED_2, 0);
   }
-
 }

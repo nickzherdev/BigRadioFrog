@@ -12,8 +12,16 @@ Uses nRF24L01 to communicate two Arduino's. Control LED and Motor with button an
 - Trema LED module
 - DC Motor
 
+## Done
+- Upload sketch via FTDI adapter (receiver)
+- Control motor speed and direction with joystick using nrf24
+- Control LED using nrf24
+- 
+
 ## TODO
+- Add acquire message
+https://github.com/AlexGyver/nRF24L01/tree/master/Projects
 
-- Control motor speed and direction with joystick
+## Links
+
 wiki.amperka.ru/продукты:arduino-motor-shield
-
