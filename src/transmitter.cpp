@@ -20,6 +20,13 @@ struct DataPack {
 };
 
 DataPack Signal;  // control values
+// DataPack telemetry;  // control values
+
+byte rssi;
+int trnsmtd_pack = 1;
+int failed_pack;
+// unsigned long RSSI_timer;
+
 int user_input_jx = 0;
 bool flag = 0;
 
@@ -41,17 +48,44 @@ void loop() {
   if (abs(Signal.motorSpeed) > 20 ) {  // Deadzone
     Signal.LED = (byte)abs(Signal.motorSpeed);
     radio.powerUp();
-    radio.write(&Signal, sizeof(Signal));
+    if (radio.write(&Signal, sizeof(Signal))) {
+      trnsmtd_pack++;
+
+      // DOESN'T WORK PROPERLY -- enableAckPayload
+      // Serial.println("Sent");
+      // if (!radio.available()) {   // если получаем пустой ответ
+      // } else {
+      //   while (radio.available() ) {                    // если в ответе что-то есть
+      //     radio.read(&telemetry, sizeof(telemetry));    // читаем
+      //     // получили забитый данными массив telemetry ответа от приёмника
+      //     Serial.print("Got telemetry: ");
+      //     Serial.println(telemetry.LED);
+      //   }
+      // }
+    } else {
+        failed_pack++;
+    }
     radio.powerDown();
-    Serial.println("Sent");
-  } else {
-      analogWrite(LED_PIN, 0);
   }
+
+  // CALCULATE RSSI
+  // if (millis() - RSSI_timer > 1000) {    // таймер RSSI
+  //   // расчёт качества связи (0 - 100%) на основе числа ошибок и числа успешных передач
+  //   rssi = (1 - ((float)failed_pack / trnsmtd_pack)) * 100;
+
+  //   Serial.print("RSSI: ");
+  //   Serial.println(rssi);
+
+  //   // сбросить значения
+  //   failed_pack = 0;
+  //   trnsmtd_pack = 0;
+  //   RSSI_timer = millis();
+  // }
 
   jsw.tick();  // обязательная функция отработки. Должна постоянно опрашиваться
 
   if (jsw.isClick()) {
-    Serial.println("Joystick Click");
+    // Serial.println("Joystick Click");
     flag = 1;
   }
 
@@ -60,18 +94,18 @@ void loop() {
     radio.powerUp();
     radio.write(&Signal, sizeof(Signal));
     radio.powerDown();
-    Serial.println("Sent from click");
+    // Serial.println("Sent from click");
     flag = 0;
   }
 
   if (jsw.isHold()) {
-    Serial.println("Holding ");
+    // Serial.println("Holding ");
     Signal.LED = 100;
     Signal.motorSpeed = 0;
     radio.powerUp();
     radio.write(&Signal, sizeof(Signal));
     radio.powerDown();
-    Serial.println("Sent from click");
+    // Serial.println("Sent from click");
   }
 }
 

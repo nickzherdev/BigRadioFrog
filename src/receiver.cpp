@@ -15,8 +15,10 @@ struct DataPack {
   int motorSpeed;
   byte LED;
 };
-
 DataPack Signal;  // control values
+// DataPack telemetry;  // control values
+
+// int telemetry[2];       // массив данных телеметрии (то что шлём на передатчик)
 
 void setup(){
   Serial.begin(9600);
@@ -33,6 +35,21 @@ void setup(){
 }
 
 void loop(){
+
+  // DOESN'T WORK PROPERLY -- enableAckPayload
+  // while (radio.available()) {                    // слушаем эфир
+  //   radio.read(&Signal, sizeof(Signal));  // чиатем входящий сигнал
+  //   analogWrite(PIN_LED, Signal.LED);
+
+  //   // формируем пакет данных телеметрии
+  //   telemetry.motorSpeed = 11;
+  //   telemetry.LED = 22;
+
+  //   // отправляем пакет телеметрии
+  //   radio.writeAckPayload(pipe, &telemetry, sizeof(telemetry));
+  //   Serial.println("AckPayload sent");
+  // }
+  // analogWrite(PIN_LED, 0);
 
   if (radio.available()) {                                
       radio.read(&Signal, sizeof(Signal));
